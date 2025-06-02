@@ -31,12 +31,58 @@ pipeline {
                 checkout scmGit(
                     branches: [[name: "${GIT_BRANCH}"]], 
                     extensions: [
-                        submodule(parentCredentials: true, recursiveSubmodules: true, reference: ''), 
                         cleanBeforeCheckout()
                         ], 
                     userRemoteConfigs: [[credentialsId: "${GIT_CREDENTIALS}", 
                     url: "${GIT_URL}"]]
                 ) 
+            }
+        }
+
+        stage("Game Test") {
+            steps {
+                build job: 'Template-test-pipeline', parameters: [
+                    string(name: 'PROJECT_NAME', value: "${PROJECT_NAME}"), 
+                    string(name: 'CONFIG', value: "${CONFIG}"), 
+                    string(name: 'PUBLISH_TESTS_REPORT', value: "${PUBLISH_TESTS_REPORT}"), 
+                    string(name: 'GIT_URL', value: "${GIT_URL}"), 
+                    string(name: 'GIT_BRANCH', value: "${GIT_BRANCH}"), 
+                    string(name: 'GIT_CREDENTIALS', value: "${GIT_CREDENTIALS}"), 
+                    string(name: 'EDITOR_PATH', value: "${EDITOR_PATH}"), 
+                    string(name: 'RUNUAT_PATH', value: "${RUNUAT_PATH}"), 
+                    string(name: 'OPEN_CPP_COVERAGE_PATH', value: "${OPEN_CPP_COVERAGE_PATH}"), 
+                    string(name: 'PLATFORM', value: "${PLATFORM}"), 
+                    string(name: 'TEST_NAMES', value: "${TEST_NAMES}"), 
+                    string(name: 'BUILD_DIR', value: "${BUILD_DIR}")
+                ]
+            }
+        }
+
+        stage("Build") {
+            steps {
+                build job: 'Template-build-pipeline', 
+                parameters: [
+                    string(name: 'PROJECT_NAME', value: "${PROJECT_NAME}"),
+                    string(name: 'BUILD_DIR', value: "${BUILD_DIR}"),
+                    string(name: 'CONFIG', value: "${CONFIG}"),  
+                    string(name: 'PLATFORM', value: "${PLATFORM}"), 
+                    string(name: 'BUILD_TARGET', value: "${BUILD_TARGET}"), 
+                    string(name: 'RUNUAT_PATH', value: "${RUNUAT_PATH}"), 
+                    string(name: 'ARCHIVE_FOLDER', value: "${ARCHIVE_FOLDER}")
+                ]
+            }
+        }
+
+        stage("Generation Docs") {
+            steps {
+                build job: 'Template-docs-pipeline', 
+                parameters: [
+                    string(name: 'PROJECT_NAME', value: "${PROJECT_NAME}"),
+                    string(name: 'VERSION', value: "${VERSION}"),
+                    string(name: 'PROJECT_DESCRIPTION', value: "${PROJECT_DESCRIPTION}"),
+                    string(name: 'BUILD_DIR', value: "${BUILD_DIR}"),
+                    string(name: 'DOCS_DIR', value: "${BUILD_DIR}\\Documentetion")
+                ]
             }
         }
     }
