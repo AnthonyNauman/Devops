@@ -1,0 +1,122 @@
+def loadProperties(path) {
+    properties = new Properties()
+    File propertiesFile = new File(path)
+    properties.load(propertiesFile.newDataInputStream())
+    Set<Object> keys = properties.keySet();
+    
+    for(Object k:keys) {
+        String key = (String)k;
+        String value =(String) properties.getProperty(key)
+        env."${key}" = "${value}"
+    }
+}
+
+
+pipeline {
+    agent {
+        node {
+            label "master"
+        }
+    }
+
+    parameters {
+        string name: 'PROP_PATH', defaultValue: '', description: 'Local path to jenkins.properties file'
+        // // Project
+        // string name: 'PROJECT_NAME', defaultValue: 'TPS', description: 'Name of .uproject file'
+        // string name: 'PROJECT_DESCRIPTION', defaultValue: 'Test TPS game project for learning testing and pipelines', description: 'Description of project'
+        // string name: 'VERSION', defaultValue: '0.0.0.1', description: 'Project version'
+        // string name: 'BUILD_DIR', defaultValue: 'S:\\JenkinsJobs\\Tests\\Template-test-pipeline', description: 'Local build directory path'
+        
+        // // GIT
+        // string name: 'GIT_URL', defaultValue: 'https://github.com/AnthonyNauman/TPS', description: 'Project GitHub URL'
+        // string name: 'GIT_BRANCH', defaultValue: 'master', description: 'Branch for checkout'
+        // string name: 'GIT_CREDENTIALS', defaultValue: 'AnthonyNauman-github', description: 'GitHub credentials name'
+        
+        // // Build params
+        // choice name: 'CONFIG', choices: ['Development', 'Shipping', 'DebugGame'], description: 'Build configuration'
+        // // choice name: 'PLATFORM', choices: ['Win64', 'Linux'], description: 'Build platform'
+        // choice name: 'BUILD_TARGET', choices: ['Standalon Game', 'Client and Server', 'Client', 'Server'], description: 'Build target'
+        
+        // // Paths
+        // string name: 'UE_ENGINE_DIR', defaultValue: 'S:\\JenkinsJobs\\UE_5.5\\LocalBuilds\\Engine\\Windows\\Engine', description: 'Local build directory path'
+        // string name: 'OPEN_CPP_COVERAGE_PATH', defaultValue: 'C:\\Program Files\\OpenCppCoverage\\OpenCppCoverage.exe', description: 'Local path to OpenCPPCoverage executable file'
+
+        // // Testing
+        // choice name: 'PUBLISH_TESTS_REPORT', choices: ['True', 'False'], description: 'Publish test reports'
+        // string name: 'TEST_NAMES', defaultValue: 'TPSGame.UI', description: 'Test category for run'
+
+    }
+
+    environment {
+        // PLATFORM = Win64
+        // EDITOR_PATH = "${UE_ENGINE_DIR}\\Binaries\\Win64\\UnrealEditor.exe"
+        // RUNUAT_PATH = "${UE_ENGINE_DIR}\\Build\\BatchFiles\\RunUAT.bat"
+        // ARCHIVE_FOLDER = "Artifacts\\${VERSION}\\${BUILD_NUMBER}"
+
+        vars = loadProperties("${PROP_PATH}")
+    }
+
+    stages{
+        
+        stage("Git clone") {
+            steps {
+                echo 'Git clone ...'
+                checkout scmGit(
+                    branches: [[name: "${GIT_BRANCH}"]], 
+                    extensions: [
+                        cleanBeforeCheckout()
+                        ], 
+                    userRemoteConfigs: [[credentialsId: "${GIT_CREDENTIALS}", 
+                    url: "${GIT_URL}"]]
+                ) 
+            }
+        }
+
+        stage("Game Test") {
+            steps {
+                build job: 'Template-test-pipeline', parameters: [
+                    string(name: 'PROJECT_NAME', value: "${PROJECT_NAME}"), 
+                    string(name: 'CONFIG', value: "${CONFIG}"), 
+                    string(name: 'PUBLISH_TESTS_REPORT', value: "${PUBLISH_TESTS_REPORT}"), 
+                    string(name: 'GIT_URL', value: "${GIT_URL}"), 
+                    string(name: 'GIT_BRANCH', value: "${GIT_BRANCH}"), 
+                    string(name: 'GIT_CREDENTIALS', value: "${GIT_CREDENTIALS}"), 
+                    string(name: 'EDITOR_PATH', value: "${EDITOR_PATH}"), 
+                    string(name: 'RUNUAT_PATH', value: "${RUNUAT_PATH}"), 
+                    string(name: 'OPEN_CPP_COVERAGE_PATH', value: "${OPEN_CPP_COVERAGE_PATH}"), 
+                    string(name: 'PLATFORM', value: "${PLATFORM}"), 
+                    string(name: 'TEST_NAMES', value: "${TEST_NAMES}"), 
+                    string(name: 'BUILD_DIR', value: "${BUILD_DIR}")
+                ]
+            }
+        }
+
+        stage("Build") {
+            steps {
+                build job: 'Template-build-pipeline', 
+                parameters: [
+                    string(name: 'PROJECT_NAME', value: "${PROJECT_NAME}"),
+                    string(name: 'BUILD_DIR', value: "${BUILD_DIR}"),
+                    string(name: 'CONFIG', value: "${CONFIG}"),  
+                    string(name: 'PLATFORM', value: "${PLATFORM}"), 
+                    string(name: 'BUILD_TARGET', value: "${BUILD_TARGET}"), 
+                    string(name: 'RUNUAT_PATH', value: "${RUNUAT_PATH}"), 
+                    string(name: 'ARCHIVE_FOLDER', value: "${ARCHIVE_FOLDER}")
+                ]
+            }
+        }
+
+        stage("Generation Docs") {
+            steps {
+                build job: 'Template-docs-pipeline', 
+                parameters: [
+                    string(name: 'PROJECT_NAME', value: "${PROJECT_NAME}"),
+                    string(name: 'VERSION', value: "${VERSION}"),
+                    string(name: 'PROJECT_DESCRIPTION', value: "${PROJECT_DESCRIPTION}"),
+                    string(name: 'BUILD_DIR', value: "${BUILD_DIR}"),
+                    string(name: 'DOCS_DIR', value: "${BUILD_DIR}\\Documentetion")
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,61 @@
+pipeline {
+    agent {
+        node {
+            label ""
+            customWorkspace "$BUILD_DIR"
+        }
+    }
+
+    parameters {
+        string name: 'PROJECT_NAME', defaultValue: '', description: 'Name of .uproject file'
+        choice name: 'CONFIG', choices: ['Development', 'Shipping', 'DebugGame'], description: 'Build configuration'
+        string name: 'PLATFORM', defaultValue: '', description: 'Build platform'
+        choice name: 'BUILD_TARGET', choices: ['Client and Server', 'Client', 'Server', 'Standalon Game'], description: 'Build target'
+
+        string name: 'RUNUAT_PATH', defaultValue: '', description: 'Local path to UE RunUAT bat script'
+        string name: 'ARCHIVE_FOLDER', defaultValue: '', description: 'Artifacts directory'
+        string name: 'BUILD_DIR', defaultValue: '', description: 'Project folder'
+
+    }
+
+
+   /*/ environment {    
+        // ARCHIVE_DIR = "S:\\JenkinsJobs\\Artifacts\\$JOB_NAME\\$BUILD_NUMBER"
+        ARCHIVE_DIR = "${BUILD_DIR}\\${ARCHIVE_FOLDER}"
+    }*/
+
+    stages{
+
+        stage("Build") {
+            steps {
+                echo 'Build ...'
+                bat '''
+                    if "%BUILD_TARGET%"=="Client and Server" (
+                        set BUILD_FLAGS=-build -cook -skippackage -stage -archive -pak -allmaps -server -client
+                    ) else if "%BUILD_TARGET%"=="Client" (
+                        set BUILD_FLAGS=-build -cook -skippackage -stage -archive -pak -allmaps -client
+                    ) else if "%BUILD_TARGET%"=="Server" (
+                        set BUILD_FLAGS=-build -cook -skippackage -stage -archive -pak -allmaps -noclient -server
+                    )  else (
+                        set BUILD_FLAGS=-build -cook -skippackage -stage -archive -pak -allmaps
+                    )
+
+                    "%RUNUAT_PATH%" BuildCookRun ^
+                    -project="%BUILD_DIR%\\%PROJECT_NAME%.uproject" ^
+                    -platform=%PLATFORM% ^
+                    -clientconfig=%CONFIG% ^
+                    -serverconfig=%CONFIG% ^
+                    -archivedirectory=%ARCHIVE_DIR% ^
+                    %BUILD_FLAGS%
+                '''
+            }
+        }
+
+        stage("Archive artifacts") {
+            steps {
+                echo 'Archive artifacts ...'
+                archiveArtifacts artifacts: "${ARCHIVE_FOLDER}\\**\\*.*"
+            }
+        }
+    }
+}

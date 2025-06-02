@@ -1,0 +1,16 @@
+.vs
+.idea
+.vsconfig
+
+Artifacts/
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+Devops/Tests/Data/
+Devops/DevopsData/
+Documentation/
+Scripts/
+
+*.sln

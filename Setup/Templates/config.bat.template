@@ -1,0 +1,73 @@
+@echo off
+
+:: *************************** !! IMPORTANT !! ***************************
+::
+:: Required to setup variables
+
+set VERSION=1.0.0.0
+set PROJECT_DESCRIPTION=Project description
+set VERSION_SELECTOR=
+set UE_PATH=
+set COPYRIGHT_LINE=// Copyright Epic Games, Inc. All Rights Reserved.
+set TEST_NAMES=
+set OPEN_CPP_COVERAGE_PATH=
+set JENKINS_NODE_START_BAT_FILE=
+
+:: Required to install soft and set env paths
+:: Doxygen, Clang-format, OpenCppCoverage, python
+
+:: *************************** !! IMPORTANT !! ***************************
+
+
+:: ================================ !! Project !! ================================
+set PROJECT_NAME=
+set PROJECT_DIR=%~dp0..\..
+for %%G in ("%PROJECT_DIR%\*.uproject") do (
+    set "PROJECT_NAME=%%~nG"
+)
+set UPROJECT_PATH=%PROJECT_DIR%\%PROJECT_NAME%.uproject
+set DEVOPS_PATH=%PROJECT_DIR%\Devops
+
+
+:: ================================ !! Paths !! ================================
+set RUNUAT_PATH=%UE_PATH%\Engine\Build\BatchFiles\RunUAT.bat
+set UE_BUILD_TOOL_REL_PATH=Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe
+set EDITOR_PATH=%UE_PATH%\Engine\Binaries\Win64\UnrealEditor.exe
+
+
+:: ============================== !! Build Configuration !! ==============================
+set PLATFORM=Win64
+set PLATFORM_NAME=Windows
+set CONFIGURATION=Development
+set ARCHIVE_DIR=%PROJECT_DIR%\Artifacts
+
+
+:: ================================ !! Sources !! ================================
+set SOURCE_CODE_PATH=%PROJECT_DIR%\Source
+set DIRS_TO_REMOVE=Intermediate DerivedDataCache Saved Binaries .vs Build Documentation
+set FILES_TO_REMOVE=*.sln
+
+
+:: ================================ !! Targets !! ================================
+set EXTRA_MODULE_NAMES="%PROJECT_NAME%"
+set TARGET_TEMPLATE_PATH=%DEVOPS_PATH%\Targets\GameModule.Target.cs.template
+
+
+:: ================================ !! Run !! ================================
+set GAME_EXE_PATH=%ARCHIVE_DIR%\%PLATFORM_NAME%\%PROJECT_NAME%.exe
+set SERVER_EXE_PATH=%ARCHIVE_DIR%\%PLATFORM_NAME%Server\%PROJECT_NAME%Server.exe
+set CLIENT_EXE_PATH=%ARCHIVE_DIR%\%PLATFORM_NAME%Client\%PROJECT_NAME%Client.exe
+
+
+:: ================================ !! Tests !! ================================
+set TEST_OUTPUT_LOG_PATH=%PROJECT_DIR%\Build\Tests\Tests.log
+set REPORT_OUTPUT_PATH=%PROJECT_DIR%\Build\Tests
+set UE_AUTOMATION_CONTENT_PATH=%UE_PATH%\Engine\Content\Automation
+
+
+:: ================================ !! Docs !! ================================
+set DOCS_DIR=%PROJECT_DIR%\Documentation
+set DOXYFILE=%DOCS_DIR%\Doxyfile
+set DEVOPS_DOCS=%DEVOPS_PATH%\Docs
+set DOXYGEN_FLAT_SRC=%DEVOPS_DOCS%\doxygenFlatTheme\src
+set DOXYGEN_DARK_SRC=%DEVOPS_DOCS%\doxygenDarkTheme

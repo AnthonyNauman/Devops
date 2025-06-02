@@ -1,0 +1,109 @@
+pipeline {
+    agent {
+        node {
+            label ""
+            customWorkspace "$BUILD_DIR"
+        }
+    }
+
+    parameters {
+        string name: 'PROJECT_NAME', defaultValue: '', description: 'Name of .uproject file'
+        string name: 'VERSION', defaultValue: '', description: 'Project version'
+        string name: 'PROJECT_DESCRIPTION', defaultValue: '', description: 'Project description'
+        string name: 'BUILD_DIR', defaultValue: '', description: 'Project folder'
+        string name: 'DOCS_DIR', defaultValue: '', description: 'Documentation folder'
+    }
+
+   /*/ environment {
+        DOXYFILE = "${DOCS_DIR}\\Doxyfile"
+        SOURCE_CODE_PATH = "${BUILD_DIR}\\Source"
+        DOXYGEN_FLAT_SRC = "${BUILD_DIR}\\Devops\\Docs\\doxygenFlatTheme\\src"
+        DOXYGEN_DARK_SRC = "${BUILD_DIR}\\Devops\\Docs\\doxygenDarkTheme"
+    }*/
+
+    stages{
+
+        stage("Generate docs") {
+            steps {
+                echo 'Generate docs ...'
+                bat '''
+                    rmdir /q %DOCS_DIR%
+                    mkdir %DOCS_DIR%
+
+                    rem generating default Doxyfile
+                    doxygen -g %DOXYFILE%
+
+                    set PROJECT_NUMBER=%VERSION%
+                    set PROJECT_BRIEF="%PROJECT_DESCRIPTION%"
+                    set PROJECT_LOGO=""
+                    set OUTPUT_DIRECTORY="%DOCS_DIR%"
+                    set INPUT="%SOURCE_CODE_PATH%"
+                    set CREATE_SUBDIRS="NO"
+                    set ALLOW_UNICODE_NAMES="NO"
+                    set OUTPUT_LANGUAGE="English"
+                    set OUTPUT_TEXT_DIRECTION="None"
+                    set BRIEF_MEMBER_DESC="YES"
+                    set REPEAT_BRIEF="YES"
+                    set RECURSIVE="YES"
+                    set GENERATE_HTML="YES"
+                    set GENERATE_LATEX="NO"
+                    set USE_MDFILE_AS_MAINPAGE="README.md"
+                    set HTML_EXTRA_STYLESHEET=%DOXYGEN_FLAT_SRC%\\doxygen-style.css
+                    ::set DARK_THEME_EXTRA_FILES=%DOXYGEN_DARK_SRC%\\custom_dark_theme.css
+                    ::set DARK_THEME_EXTRA_FILES=%DARK_THEME_EXTRA_FILES% %DOXYGEN_DARK_SRC%\\custom.css
+                    set HTML_FOOTER=%DOXYGEN_DARK_SRC%\\html_footer.html
+                    set HTML_HEADER=%DOXYGEN_DARK_SRC%\\html_header.html
+
+                    rem Change default values in Doxyfile
+                    set FLAT_THEME_IMAGE_FOLDER=%DOXYGEN_FLAT_SRC%\\img
+                    set HTML_EXTRA_FILES=%FLAT_THEME_IMAGE_FOLDER%\\closed-folder.png
+                    set HTML_EXTRA_FILES=%HTML_EXTRA_FILES% %FLAT_THEME_IMAGE_FOLDER%\\document.png
+                    set HTML_EXTRA_FILES=%HTML_EXTRA_FILES% %FLAT_THEME_IMAGE_FOLDER%\\off_sync.png
+                    set HTML_EXTRA_FILES=%HTML_EXTRA_FILES% %FLAT_THEME_IMAGE_FOLDER%\\on_sync.png
+                    set HTML_EXTRA_FILES=%HTML_EXTRA_FILES% %FLAT_THEME_IMAGE_FOLDER%\\opened-folder.png
+
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^PROJECT_NAME *=.*\', \'PROJECT_NAME = %PROJECT_NAME%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^PROJECT_NUMBER *=.*\', \'PROJECT_NUMBER = %PROJECT_NUMBER%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^PROJECT_BRIEF *=.*\', \'PROJECT_BRIEF = %PROJECT_BRIEF%\' | sc %DOXYFILE%"
+                    :: powershell -Command "(gc %DOXYFILE%) -replace \'^PROJECT_LOGO *=.*\', \'PROJECT_LOGO = %PROJECT_LOGO%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^OUTPUT_DIRECTORY *=.*\', \'OUTPUT_DIRECTORY = %OUTPUT_DIRECTORY%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^INPUT *=.*\', \'INPUT = %INPUT% README.md\' | sc %DOXYFILE%"
+                    :: powershell -Command "(gc %DOXYFILE%) -replace \'^CREATE_SUBDIRS *=.*\', \'CREATE_SUBDIRS = %CREATE_SUBDIRS%\' | sc %DOXYFILE%"
+                    :: powershell -Command "(gc %DOXYFILE%) -replace \'^ALLOW_UNICODE_NAMES *=.*\', \'ALLOW_UNICODE_NAMES = %ALLOW_UNICODE_NAMES%\' | sc %DOXYFILE%"
+                    :: powershell -Command "(gc %DOXYFILE%) -replace \'^OUTPUT_LANGUAGE *=.*\', \'OUTPUT_LANGUAGE = %OUTPUT_LANGUAGE%\' | sc %DOXYFILE%"
+                    :: powershell -Command "(gc %DOXYFILE%) -replace \'^OUTPUT_TEXT_DIRECTION *=.*\', \'OUTPUT_TEXT_DIRECTION = %OUTPUT_TEXT_DIRECTION%\' | sc %DOXYFILE%"
+                    :: powershell -Command "(gc %DOXYFILE%) -replace \'^BRIEF_MEMBER_DESC *=.*\', \'BRIEF_MEMBER_DESC = %BRIEF_MEMBER_DESC%\' | sc %DOXYFILE%"
+                    :: powershell -Command "(gc %DOXYFILE%) -replace \'^REPEAT_BRIEF *=.*\', \'REPEAT_BRIEF = %REPEAT_BRIEF%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^RECURSIVE *=.*\', \'RECURSIVE = %RECURSIVE%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^GENERATE_HTML *=.*\', \'GENERATE_HTML = %GENERATE_HTML%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^GENERATE_LATEX *=.*\', \'GENERATE_LATEX = %GENERATE_LATEX%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^USE_MDFILE_AS_MAINPAGE *=.*\', \'USE_MDFILE_AS_MAINPAGE = %USE_MDFILE_AS_MAINPAGE%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^HTML_EXTRA_STYLESHEET *=.*\', \'HTML_EXTRA_STYLESHEET = %HTML_EXTRA_STYLESHEET%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^HTML_EXTRA_FILES *=.*\', \'HTML_EXTRA_FILES = %HTML_EXTRA_FILES%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^HTML_FOOTER *=.*\', \'HTML_FOOTER = %HTML_FOOTER%\' | sc %DOXYFILE%"
+                    powershell -Command "(gc %DOXYFILE%) -replace \'^HTML_HEADER *=.*\', \'HTML_HEADER = %HTML_HEADER%\' | sc %DOXYFILE%"
+
+                    rem generate docs
+                    pushd "%BUILD_DIR%"
+                    doxygen "%DOXYFILE%"
+                    popd
+                '''
+            }
+        }
+
+        stage("Publish docs") {
+            steps {
+                echo 'Publish docs ...'
+                publishHTML([
+                    allowMissing: false, 
+                    alwaysLinkToLastBuild: false,
+                    keepAll: false, 
+                    reportDir: "${DOCS_DIR}\\html", 
+                    reportFiles: 'index.html', 
+                    reportName: 'Documents', 
+                    useWrapperFileDirectly: true
+                ])
+            }
+        }
+    }
+}

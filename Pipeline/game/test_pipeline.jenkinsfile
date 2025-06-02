@@ -1,0 +1,92 @@
+pipeline {
+    agent {
+        node {
+            label "TestRunnerLabel"
+            customWorkspace "$BUILD_DIR"
+        }
+    }
+
+    parameters {
+        string name: 'PROJECT_NAME', defaultValue: '', description: 'Name of .uproject file'
+        choice name: 'CONFIG', choices: ['Development', 'Shipping', 'DebugGame'], description: 'Build configuration'
+        string name: 'PLATFORM', defaultValue: '', description: 'Build platform'
+        choice name: 'PUBLISH_TESTS_REPORT', choices: ['True', 'False'], description: 'Publish test reports'
+        string name: 'GIT_URL', defaultValue: '', description: 'Project GitHub URL'
+        string name: 'GIT_BRANCH', defaultValue: '', description: 'Branch for checkout'
+        string name: 'GIT_CREDENTIALS', defaultValue: '', description: 'GitHub credential label'
+        string name: 'EDITOR_PATH', defaultValue: '', description: 'Local path to UE Editor'
+        string name: 'RUNUAT_PATH', defaultValue: '', description: 'Local path to UE RunUAT bat script'
+        string name: 'OPEN_CPP_COVERAGE_PATH', defaultValue: '', description: 'Local path to OpenCPPCoverage executable file'
+        string name: 'TEST_NAMES', defaultValue: '', description: 'Test category for run'
+        string name: 'BUILD_DIR', defaultValue: '', description: 'Project folder'
+        
+    }
+
+   /*/ environment {
+        WITH_REPORT = "${PUBLISH_TESTS_REPORT}"
+        REPORT_OUTPUT_PATH = "$BUILD_DIR\\Build\\Tests"
+        UPROJECT_PATH="${BUILD_DIR}\\${PROJECT_NAME}.uproject"
+        BUILD_FLAGS = '-build -cook'
+        EDITOR_FLAGS = '-stdout -nosplash'
+        REPORT_EXPORT_TYPE = "cobertura:${BUILD_DIR}\\Build\\Tests\\Coverage.xml"
+        SOURCE_CODE_PATH = "${BUILD_DIR}\\Source"
+        EXCLUDED_SOURCES = "${BUILD_DIR}\\Source\\${PROJECT_NAME}\\Tests"
+        TEST_EXTRA_CMD = '' // SetPriority Critical;
+    }*/
+
+    stages{
+
+        stage("Build") {
+            steps {
+                echo 'Build ...'
+                bat '''
+                    call "%RUNUAT_PATH%" BuildCookRun ^
+                    -project="%UPROJECT_PATH%" ^
+                    -platform=%PLATFORM% ^
+                    -clientconfig=%CONFIG% ^
+                    %BUILD_FLAGS%
+                '''
+            }
+        }
+
+        stage("Test") {
+            steps {
+                echo 'Tests ...'
+                bat '''
+                    set TEST_RUNNER="%EDITOR_PATH%" "%UPROJECT_PATH%" -ExecCmds="Automation %TEST_EXTRA_CMD%RunTests %TEST_NAMES%;Quit" ^
+                    -ReportOutputPath="%REPORT_OUTPUT_PATH%" %EDITOR_FLAGS%
+
+                    "%OPEN_CPP_COVERAGE_PATH%" --modules="%BUILD_DIR%" --sources="%SOURCE_CODE_PATH%" ^
+                    --excluded_sources="%EXCLUDED_SOURCES%" --export_type="%REPORT_EXPORT_TYPE%" -- %TEST_RUNNER%
+
+                    if errorlevel 225 echo WARNING: Tests failed. Error code: %errorlevel% & exit /b 0
+                '''
+            }
+        }
+
+        stage("Publish test results") {
+            when {
+                environment name: 'WITH_REPORT', value: 'True'
+            }
+            environment{
+                CONVERTER_PATH="$BUILD_DIR\\Devops\\Tests\\ue_report_to_junit.py"
+                UE_TESTS_REPORT_PATH="$BUILD_DIR\\Build\\Tests\\index.json"
+                JUNIT_TESTS_REPORT_PATH="$BUILD_DIR\\Build\\Tests\\index.xml"
+                COBERTURA_PATCHER_PATH="$BUILD_DIR\\Devops\\Tests\\cobertura_report_patcher.py"
+                CODE_COVERAGE_PATH="$BUILD_DIR\\Build\\Tests\\Coverage.xml"
+            }
+            steps {
+                echo 'Publish test results ...'
+                bat '''
+                    "%CONVERTER_PATH%" -ue_report_path="%UE_TESTS_REPORT_PATH%" -junit_xml_path="%JUNIT_TESTS_REPORT_PATH%"
+
+                    "%COBERTURA_PATCHER_PATH%" -cobertura_report_path="%CODE_COVERAGE_PATH%"
+                '''
+
+                junit 'Build\\Tests\\index.xml'
+                cobertura coberturaReportFile: 'Build\\Tests\\Coverage.xml', onlyStable: false
+            }
+        }
+
+    }
+}

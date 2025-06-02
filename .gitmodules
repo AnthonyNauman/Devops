@@ -1,0 +1,6 @@
+[submodule "Docs/doxygenFlatTheme"]
+	path = Docs/doxygenFlatTheme
+	url = git@github.com:AnthonyNauman/Doxygen-Flat-Theme.git
+[submodule "Docs/doxygenDarkTheme"]
+	path = Docs/doxygenDarkTheme
+	url = git@github.com:AnthonyNauman/Doxygen-Dark-Theme.git

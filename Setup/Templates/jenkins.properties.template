@@ -1,0 +1,14 @@
+PROJECT_NAME = TPS
+PROJECT_DESCRIPTION = Test TPS game project for learning testing and pipelines
+VERSION = 0.0.0.1
+BUILD_DIR = S:\\JenkinsJobs\\Tests\\Template-test-pipeline
+GIT_URL = https://github.com/AnthonyNauman/TPS
+GIT_BRANCH = master
+GIT_CREDENTIALS = AnthonyNauman-github
+PLATFORM = Win64
+CONFIG = Development
+BUILD_TARGET = Standalon Game
+UE_ENGINE_DIR = S:\\JenkinsJobs\\UE_5.5\\LocalBuilds\\Engine\\Windows\\Engine
+OPEN_CPP_COVERAGE_PATH = C:\\Program Files\\OpenCppCoverage\\OpenCppCoverage.exe
+PUBLISH_TESTS_REPORT = True
+TEST_NAMES = TPSGame.UI

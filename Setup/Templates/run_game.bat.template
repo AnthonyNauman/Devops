@@ -1,0 +1,4 @@
+@echo off
+
+call "%~dp0..\Devops\Run\run_server.bat"
+call "%~dp0..\Devops\Run\run_2_clients.bat"
