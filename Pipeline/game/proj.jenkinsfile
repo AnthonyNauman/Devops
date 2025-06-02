@@ -31,14 +31,12 @@ pipeline {
                 checkout scmGit(
                     branches: [[name: "${GIT_BRANCH}"]], 
                     extensions: [
-                        cleanBeforeCheckout(), cleanBeforeCheckout()
+                        submodule(parentCredentials: true, recursiveSubmodules: true, reference: ''), 
+                        cleanBeforeCheckout()
                         ], 
                     userRemoteConfigs: [[credentialsId: "${GIT_CREDENTIALS}", 
                     url: "${GIT_URL}"]]
                 ) 
-
-                checkout scmGit(branches: [[name: "${GIT_BRANCH}"]], extensions: [submodule(parentCredentials: true, recursiveSubmodules: true, reference: ''), cleanBeforeCheckout()], userRemoteConfigs: [[credentialsId: "${GIT_CREDENTIALS}", 
-                    url: "${GIT_URL}"]])
             }
         }
     }
