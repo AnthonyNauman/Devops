@@ -16,7 +16,7 @@ for %%F in ("%SOURCE_DIR%\*.template") do (
     ) else if /i "!filename!"==".gitignore" (
         copy %%F %SCRIPTS_DIR%\..\!filename!
     ) else if /i "!filename!"=="jenkins.properties" (
-        copy %%F %SCRIPTS_DIR%\..\!filename!
+        copy %%F %DEST_DIR%\!filename!
     ) else if /i "!filename!"==".clang-format" (
         copy %%F %SCRIPTS_DIR%\..\!filename!
     ) else (
