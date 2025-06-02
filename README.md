@@ -3,6 +3,10 @@ Devops repo for UE5 projects which contains different scripts and templates
 
  - Add this repo as submodule (with name Devops) to your UE5 project near .uproject file.
 ```
+git init
+```
+
+```
 git submodule add git@github.com:AnthonyNauman/Devops.git Devops
 ```
  - Run Setup/setup.bat file. It copies template files to scripts folder and some files to project directory.
