@@ -1,0 +1,45 @@
+def loadProperties(path) {
+    properties = new Properties()
+    File propertiesFile = new File(path)
+    properties.load(propertiesFile.newDataInputStream())
+    Set<Object> keys = properties.keySet();
+    
+    for(Object k:keys) {
+        String key = (String)k;
+        String value =(String) properties.getProperty(key)
+        env."${key}" = "${value}"
+    }
+}
+
+pipeline {
+    agent {
+        node {
+            label ""
+            customWorkspace "$BUILD_DIR"
+        }
+    }
+
+    environment {
+        vars = loadProperties("${PROPERTIES_FILE}")
+    }
+
+    stages{
+
+        stage("Git clone") {
+            steps {
+                echo 'Git clone ...'
+                checkout scmGit(
+                    branches: [[name: "${GIT_BRANCH}"]], 
+                    extensions: [
+                        cleanBeforeCheckout(), cleanBeforeCheckout()
+                        ], 
+                    userRemoteConfigs: [[credentialsId: "${GIT_CREDENTIALS}", 
+                    url: "${GIT_URL}"]]
+                ) 
+
+                checkout scmGit(branches: [[name: "${GIT_BRANCH}"]], extensions: [submodule(parentCredentials: true, recursiveSubmodules: true, reference: ''), cleanBeforeCheckout()], userRemoteConfigs: [[credentialsId: "${GIT_CREDENTIALS}", 
+                    url: "${GIT_URL}"]])
+            }
+        }
+    }
+}
