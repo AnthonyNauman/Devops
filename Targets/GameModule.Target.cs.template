@@ -9,7 +9,7 @@ public class %MODULE_NAME%%TARGET_TYPE%Target : TargetRules
 	{
 		Type = TargetType.%TARGET_TYPE%;
         DefaultBuildSettings = BuildSettingsVersion.V5;
-		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_5;
+		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_6;
 		ExtraModuleNames.AddRange( new string[] { %EXTRA_MODULE_NAMES% } );
 	}
 }
