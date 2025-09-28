@@ -23,8 +23,6 @@ if not exist "%DOCKERFILE_PATH%" (
 )
 
 docker build -f %DOCKERFILE_PATH% ^
-    --build-arg SERV_ARTIFACTS_LOCAL_PATH=%SERV_ARTIFACTS_LOCAL_PATH% ^
-    --build-arg ENTRY_FILE_NAME=%ENTRY_FILE_NAME% ^
     -t %IMAGE_NAME%:%TAG% %PROJECT_DIR%
 
 

@@ -1,23 +1,13 @@
 FROM ubuntu:20.04
 
 ARG SERV_ARTIFACTS_LOCAL_PATH=./Artifacts/LinuxServer
-ENV ENTRY_FILE_NAME=TProjServer.sh
 
 WORKDIR /app
 COPY ${SERV_ARTIFACTS_LOCAL_PATH} ./
 
-
-# RUN useradd -m ueuser && \
-#     chown -R ueuser:ueuser /app && \
-#     chmod +x /app/${ENTRY_FILE_NAME}
-
 RUN useradd -m ueuser && \
     chown -R ueuser:ueuser /app && \
-    chmod +x /app/${ENTRY_FILE_NAME} && \
-    echo '#!/bin/bash' > /app/entrypoint.sh && \
-    echo 'exec /app/$ENTRY_FILE_NAME' >> /app/entrypoint.sh && \
-    cat /app/entrypoint.sh && \
-    chmod +x /app/entrypoint.sh
+    chmod +x /app/%PROJECT_NAME%Server.sh
 
 
 EXPOSE 7777/tcp
@@ -25,6 +15,5 @@ EXPOSE 7777/udp
 
 USER ueuser
 
-# ENTRYPOINT ["/app/TProjServer.sh", "-p", "7777"]
-CMD ["./entrypoint.sh", "-log", "-server"]
+CMD ["./%PROJECT_NAME%Server.sh", "-log", "-server"]
 
